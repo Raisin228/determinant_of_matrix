@@ -125,3 +125,4 @@ with open(name_file) as file:
         print(f'The determinant of the matrix by the recursive formula: {matrix[0][0]}')
     else:
         rec_laplace(matrix)
+# <<<<<<<<<-----------------the ending of the code associated with the recursive Laplace formula----------->>>>>>>>>>>>>   
