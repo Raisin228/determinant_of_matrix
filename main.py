@@ -1,4 +1,3 @@
-# <<<<<<<<<-----------------the beginning of the code associated with the recursive Laplace formula----------->>>>>>>>>>>>>
 # we create a global list that will store the results of the minors
 List_res = []
 # this procedure outputs matrices in a beautiful way
@@ -62,14 +61,17 @@ def beautiful_output(k, r, c, mat, new_mat, elem):
     # when we have reached the last step, we output a message with the result of recursion
     if r[0] == r_z[0] and c[0] == c_z[0] and k == len(mat) - 1 and len(new_mat) == const_len - 1:
         print('The determinant of the matrix by the recursive formula:', end=' ')
-        for i in range(len(List_res)):
-            # put brackets if we need to it
-            if List_res[i] < 0 and i != 0:
-                L_r = '(' + str(List_res[i]) + ')'
-            else:
-                L_r = List_res[i]
-            print(f'{L_r} + ' if i != len(List_res) - 1 else f'{L_r} = {sum(List_res)}', end='')
-
+        if len(List_res) == 1:
+            print(List_res[0])
+        else:
+            for i in range(len(List_res)):
+                # put brackets if we need to it
+                if List_res[i] < 0 and i != 0:
+                    L_r = '(' + str(List_res[i]) + ')'
+                else:
+                    L_r = List_res[i]
+                print(f'{L_r} + ' if i != len(List_res) - 1 else f'{L_r} = {sum(List_res)}', end='')
+# <<<<<<<<<-----------------the beginning of the code associated with the recursive Laplace formula----------->>>>>>>>>>>>>
 # function with BY THE RECURSIVE LAPLACE FORMULA
 def rec_laplace(mat):
     global r_z, c_z
@@ -108,6 +110,26 @@ def rec_laplace(mat):
                 else:
                     ans += 0
         return ans
+# <<<<<<<<<-----------------the ending of the code associated with the recursive Laplace formula----------->>>>>>>>>>>>>
+
+ans = []
+counter = 0
+def combin_form_leibn(mat):
+    global ans, counter
+    if len(mat) == 1:
+        ans.append(mat[0][0])
+        print(ans)
+        counter += 1
+    else:
+        for i in range(len(mat)):
+            ans.append(mat[0][i])
+            metk = len(ans)
+            new_mat = [[mat[j][k] for k in range(len(mat[j])) if j != 0 and k != i] for j in range(len(mat))]
+            new_mat = [new_mat[j] for j in range(len(new_mat)) if len(new_mat[j]) != 0]
+            combin_form_leibn(new_mat)
+            ans = ans[:metk - 1]
+
+
 
 # entering the name of a text file
 name_file = input("Enter name your test file: ")
@@ -117,12 +139,13 @@ with open(name_file) as file:
     size_m = int(file.readline()) # reading first string
     matrix = [[int (j) for j in file.readline().split()] for i in range(size_m)] # reading matrix from file
     const_len = len(matrix)
-    r_z, c_z = zero_row(matrix), zero_column(matrix) # need to definitions of the first step of entering recursion
-    print("<<Your matrix from file>>")
-    output_matrix(matrix)
-    # if the matrix consists of only one element the result will be this element
-    if len(matrix) == 1:
-        print(f'The determinant of the matrix by the recursive formula: {matrix[0][0]}')
-    else:
-        rec_laplace(matrix)
-# <<<<<<<<<-----------------the ending of the code associated with the recursive Laplace formula----------->>>>>>>>>>>>>   
+    # r_z, c_z = zero_row(matrix), zero_column(matrix) # need to definitions of the first step of entering recursion
+    # print("<<Your matrix from file>>")
+    # output_matrix(matrix)
+    # # if the matrix consists of only one element the result will be this element
+    # if len(matrix) == 1:
+    #     print(f'The determinant of the matrix by the recursive formula: {matrix[0][0]}')
+    # else:
+    #     rec_laplace(matrix)
+    combin_form_leibn(matrix)
+    print(counter)
