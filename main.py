@@ -1,3 +1,6 @@
+# I connected the intertules module in order to determine the indices of elements in a combinatorial formula
+from itertools import *
+
 # we create a global list that will store the results of the minors
 List_res = []
 # this procedure outputs matrices in a beautiful way
@@ -60,7 +63,7 @@ def beautiful_output(k, r, c, mat, new_mat, elem):
             List_res.append(elem[0] * next_step)
     # when we have reached the last step, we output a message with the result of recursion
     if r[0] == r_z[0] and c[0] == c_z[0] and k == len(mat) - 1 and len(new_mat) == const_len - 1:
-        print('The determinant of the matrix by the recursive formula:', end=' ')
+        print('The determinant of the matrix by the RECURSIVE formula:', end=' ')
         if len(List_res) == 1:
             print(List_res[0])
         else:
@@ -112,24 +115,87 @@ def rec_laplace(mat):
         return ans
 # <<<<<<<<<-----------------the ending of the code associated with the recursive Laplace formula----------->>>>>>>>>>>>>
 
-ans = []
-counter = 0
+#<<<<<<<<<<-----------------the beginning of a function related to the recursive Laplace formula----------->>>>>>>>>>>>>
+# this function is needed in order to find the product of elements
+# of one of the combinations in a combinatorial formula
+# As an argument, the function takes a list that contains a combination of numbers from the matrix.
+# This function returns the product of the list items
+def multiplication_list(L):
+    output = 1
+    for t in L:
+        output *= t
+    return output
+
+# the function takes a list of indexes of one of the combinations and finds the number of inversions in it.
+# If inversion %2 == 0 => sign '+' otherwise '-'
+def sign_combin(List):
+    counter = 0
+    for i in range(len(List) - 1):
+        for j in range(i, len(List)):
+            if List[i] > List[j]: # if element on the right less then we consider this as 1 inversion
+                counter += 1
+    if counter % 2 == 0:
+        return True # true == '+'
+    else:
+        return False # false == '-'
+
+
+ans = [] # 1 combination is stored
+Num, res, counter = 0, 0, 0
+# the number of the list with indexes obtained from permutations from intertuls
+# in res stored answer from received from the combinatorial formula
+# counter in order to output 10 combinations per line and moves the cursor to the next line
+# combination formula
 def combin_form_leibn(mat):
-    global ans, counter
-    if len(mat) == 1:
+    global ans, ind, Num, res, counter # we make global variables so as not to lose the data obtained in recursion
+    if len(mat) == 1: # condition for exiting recursion and output to the screen
         ans.append(mat[0][0])
-        print(ans)
-        counter += 1
+
+        # beautiful output
+        if Num != 0:
+            # definition of the sign between the terms
+            if sign_combin(ind[Num]):
+                print(' +', end=' ')
+                counter += 1
+                if counter % 10 == 0 and counter != 0:
+                    print()
+            else:
+                print(' -', end=' ')
+                counter += 1
+                # line wrapping
+                if counter % 10 == 0 and counter != 0:
+                    print()
+        # the output of the element itself from the combination and, if necessary,
+        # put it in brackets
+        for q in range(len(ans)):
+            if q != len(ans) - 1:
+                if ans[q] < 0:
+                    print(f'({ans[q]})', '*', sep='', end='')
+                else:
+                    print(ans[q], '*', sep='', end='')
+            else:
+                if ans[q] < 0:
+                    print(f'({ans[q]})', sep='', end='')
+                else:
+                    print(ans[q], sep='', end='')
+
+        # adding or subtracting the product of a given combination to res
+        if sign_combin(ind[Num]):
+            res += multiplication_list(ans)
+        else:
+            res -= multiplication_list(ans)
+        # output at the very end of res
+        Num += 1
+        if Num == len(ind):
+            print(f' = {res}')
     else:
         for i in range(len(mat)):
-            ans.append(mat[0][i])
-            metk = len(ans)
+            ans.append(mat[0][i]) # adding one of the numbers to the combination
+            metk = len(ans) # it is needed to slice the ans list at another recursion entry
             new_mat = [[mat[j][k] for k in range(len(mat[j])) if j != 0 and k != i] for j in range(len(mat))]
-            new_mat = [new_mat[j] for j in range(len(new_mat)) if len(new_mat[j]) != 0]
+            new_mat = [new_mat[j] for j in range(len(new_mat)) if len(new_mat[j]) != 0] # a new matrix from which the element will be selected
             combin_form_leibn(new_mat)
             ans = ans[:metk - 1]
-
-
 
 # entering the name of a text file
 name_file = input("Enter name your test file: ")
@@ -139,13 +205,20 @@ with open(name_file) as file:
     size_m = int(file.readline()) # reading first string
     matrix = [[int (j) for j in file.readline().split()] for i in range(size_m)] # reading matrix from file
     const_len = len(matrix)
-    # r_z, c_z = zero_row(matrix), zero_column(matrix) # need to definitions of the first step of entering recursion
-    # print("<<Your matrix from file>>")
-    # output_matrix(matrix)
-    # # if the matrix consists of only one element the result will be this element
-    # if len(matrix) == 1:
-    #     print(f'The determinant of the matrix by the recursive formula: {matrix[0][0]}')
-    # else:
-    #     rec_laplace(matrix)
+    r_z, c_z = zero_row(matrix), zero_column(matrix) # need to definitions of the first step of entering recursion
+    print("<<Your matrix from file>>")
+    output_matrix(matrix)
+    # if the matrix consists of only one element the result will be this element
+    if len(matrix) == 1:
+        print(f'The determinant of the matrix by the RECURSIVE formula: {matrix[0][0]}')
+    else:
+        rec_laplace(matrix)
+    print('\n')
+
+    # list column indexes are needed for permutations and sign determination
+    valid_indexes = list(range(len(matrix)))
+    # all kinds of permutations by columns
+    ind = list(permutations(valid_indexes, len(valid_indexes)))
+    # calling the Leibniz combinatorial formula
+    print('<<The determinant of the matrix by the COMBINATORIAL formula>>')
     combin_form_leibn(matrix)
-    print(counter)
