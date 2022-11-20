@@ -1,13 +1,20 @@
 # I connected the intertules module in order to determine the indices of elements in a combinatorial formula
 from itertools import *
+# I connected the math module in order to count the smallest common multiple of 2 numbers in the Gauss method
+import math
 
 # we create a global list that will store the results of the minors
 List_res = []
 # this procedure outputs matrices in a beautiful way
 def output_matrix(mat):
+    max_len = 0
+    for q in range(len(mat)):
+        for h in range(len(mat)):
+            max_len = max(max_len, len(str(mat[q][h])))
+
     for i in mat:
         for j in i:
-            print(j, end=' ')
+            print(str(j).ljust(max_len), end=' ')
         print()
 
 # function for search for the row with the largest number of 0 elements and memorize this index_row
@@ -87,31 +94,47 @@ def rec_laplace(mat):
         r, c = zero_row(mat), zero_column(mat)
         # if quantity 0 in row >= quantity 0 in column
         if (r[1] > c[1] or r[1] == c[1]):
-            for k in range(len(mat[r[0]])):
-                new_mat = [[mat[i][j] for j in range(len(mat)) if i != r[0] and j != k] for i in range(0, len(mat))]
-                new_mat = [q for q in new_mat if len(q) != 0]
-                # chose sign element
-                elem = [mat[r[0]][k] if (r[0] + k) % 2 == 0 else -mat[r[0]][k]]
-                beautiful_output(k, r, c, mat, new_mat, elem)
+            flag = False
+            for i in range(len(mat[r[0]])):
+                if mat[r[0]][i] != 0:
+                    flag = True
+            if flag:
+                for k in range(len(mat[r[0]])):
+                    new_mat = [[mat[i][j] for j in range(len(mat)) if i != r[0] and j != k] for i in range(0, len(mat))]
+                    new_mat = [q for q in new_mat if len(q) != 0]
+                    # chose sign element
+                    elem = [mat[r[0]][k] if (r[0] + k) % 2 == 0 else -mat[r[0]][k]]
+                    beautiful_output(k, r, c, mat, new_mat, elem)
 
-                # if el = 0 then we can don't call recursion
-                if mat[r[0]][k] != 0:
-                    ans += elem[0] * rec_laplace(new_mat)
-                else:
-                    ans += 0
+                    # if el = 0 then we can don't call recursion
+                    if mat[r[0]][k] != 0:
+                        ans += elem[0] * rec_laplace(new_mat)
+                    else:
+                        ans += 0
+            else:
+                print('The determinant of the matrix by the RECURSIVE formula = 0')
+                return 0
 
         # if quantity 0 in row < quantity 0 in column
         elif (r[1] < c[1]):
-            for k in range(len(mat)):
-                new_mat = [[mat[i][j] for j in range(len(mat)) if i != k and j != c[0]] for i in range(0, len(mat))]
-                new_mat = [q for q in new_mat if len(q) != 0]
-                elem = [mat[k][c[0]] if (c[0] + k) % 2 == 0 else -mat[k][c[0]]]
-                beautiful_output(k, r, c, mat, new_mat, elem)
+            flag = False
+            for i in range(len(mat[c[0]])):
+                if mat[i][c[0]] != 0:
+                    flag = True
+            if flag:
+                for k in range(len(mat)):
+                    new_mat = [[mat[i][j] for j in range(len(mat)) if i != k and j != c[0]] for i in range(0, len(mat))]
+                    new_mat = [q for q in new_mat if len(q) != 0]
+                    elem = [mat[k][c[0]] if (c[0] + k) % 2 == 0 else -mat[k][c[0]]]
+                    beautiful_output(k, r, c, mat, new_mat, elem)
 
-                if mat[k][c[0]] != 0:
-                    ans += elem[0] * rec_laplace(new_mat)
-                else:
-                    ans += 0
+                    if mat[k][c[0]] != 0:
+                        ans += elem[0] * rec_laplace(new_mat)
+                    else:
+                        ans += 0
+            else:
+                print('The determinant of the matrix by the RECURSIVE formula = 0')
+                return 0
         return ans
 # <<<<<<<<<-----------------the ending of the code associated with the recursive Laplace formula----------->>>>>>>>>>>>>
 
@@ -196,6 +219,133 @@ def combin_form_leibn(mat):
             new_mat = [new_mat[j] for j in range(len(new_mat)) if len(new_mat[j]) != 0] # a new matrix from which the element will be selected
             combin_form_leibn(new_mat)
             ans = ans[:metk - 1]
+# <<<<<<<<<-----------------the ending of the code associated with the Leibniz combinatorial formula----------->>>>>>>>>>>>>
+
+#<<<<<<<<<<-----------------the beginning of a function related to the Gauss method ----------->>>>>>>>>>>>>
+# the Smallest Common Multiple (NOK)
+# 2 scm numbers are passed to the function to be counted
+# at the output we get their scm
+def s_c_m(x, y):
+    return (x * y) // math.gcd(x , y)
+
+# in this function we are looking for the smallest first
+# element with which we will reset the entire column
+def min_el_col(mat, x):
+    min_str = [x, mat[x][x]]
+    for j in range(x + 1, len(mat)):
+        if (abs(mat[j][x]) < abs(min_str[1]) and mat[j][x] != 0) or min_str[1] == 0:
+            min_str[0] = j
+            min_str[1] = mat[j][x]
+
+    # we output a message that we are now rearranging the rows in places
+    if x != min_str[0]:
+        print(f'Permutation of {x + 1} lines and {min_str[0] + 1}', sep='\n')
+    # changing the necessary lines in places
+        for i in range(len(mat)):
+            mat[min_str[0]][i], mat[x][i] = mat[x][i], mat[min_str[0]][i]
+        return 1 # the signal is that the determinant of the original matrix get a minus
+    return 0
+
+# METHOD GAUSS
+def gauss_method(mat):
+    minus_counter = 0 # from rearranging strings in places
+    answer = 1
+    list_res = [] # it is needed in order to store the multipliers by which we multiply the strings
+    # and at the end divide the answer by the product of the elements of this list
+    k = 0 # to select a leading element
+    while k != len(mat) - 1:
+        indik = 0
+        # calling a string permutation
+        m_c = minus_counter
+        minus_counter += min_el_col(mat, k)
+        if minus_counter - m_c == 1:
+            output_matrix(mat)
+            print()
+        # selecting an element to reset
+        for i in range(k + 1, len(mat)):
+            if mat[i][k] != 0:
+                scm = s_c_m(abs(mat[k][k]), abs(mat[i][k])) # the total multiplier of the leading and selected
+                mnoj2 = scm // mat[i][k]
+                if mat[k][k] != 0:
+                    mnoj1 = scm // mat[k][k]
+
+                    # + -
+                    if mat[i][k] * mnoj2 > 0 and mat[k][k] * mnoj1 < 0:
+                        if mnoj2 != 1:
+                            # output action
+                            print(f'{mnoj2} * ({i + 1}) + {mnoj1} * ({k + 1})', end='\n')
+                            indik += 1
+                            # we add a multiplier that changed our matrix in order to divide it by it at the end
+                            list_res.append(mnoj2)
+                        else:
+                            print(f'({i + 1}) + {mnoj1} * ({k + 1})', end='\n')
+                            indik += 1
+                        # subtraction or addition of two lines
+                        for q in range(len(mat)):
+                            mat[i][q] = mat[i][q] * mnoj2 + mat[k][q] * mnoj1
+                    # - +
+                    if mat[i][k] * mnoj2 < 0 and mat[k][k] * mnoj1 > 0:
+                        if mnoj2 != 1:
+                            print(f'{mnoj2} * ({i + 1}) + {mnoj1} * ({k + 1})', end='\n')
+                            indik += 1
+                            list_res.append(mnoj2)
+                        else:
+                            print(f'({i + 1}) + {mnoj1} * ({k + 1})', end='\n')
+                            indik += 1
+                        for q in range(len(mat)):
+                            mat[i][q] = mat[i][q] * mnoj2 + mat[k][q] * mnoj1
+                    # + +
+                    if mat[i][k] * mnoj2 > 0 and mat[k][k] * mnoj1 > 0:
+                        if mnoj2 != 1:
+                            print(f'{mnoj2} * ({i + 1}) - {mnoj1} * ({k + 1})', end='\n')
+                            indik += 1
+                            list_res.append(mnoj2)
+                        else:
+                            print(f'({i + 1}) - {mnoj1} * ({k + 1})', end='\n')
+                            indik += 1
+                        for q in range(len(mat)):
+                            mat[i][q] = mat[i][q] * mnoj2 - mat[k][q] * mnoj1
+                    # - -
+                    if mat[i][k] * mnoj2 < 0 and mat[k][k] * mnoj1 < 0:
+                        if mnoj2 != 1:
+                            print(f'{mnoj2} * ({i + 1}) + {mnoj1} * ({k + 1})', end='\n')
+                            indik += 1
+                            list_res.append(mnoj2)
+                        else:
+                            print(f'({i + 1}) + {mnoj1} * ({k + 1})', end='\n')
+                            indik += 1
+                        for q in range(len(mat)):
+                            mat[i][q] = mat[i][q] * mnoj2 + mat[k][q] * mnoj1
+        # output of a matrix with a zeroed column
+        if indik != 0:
+            output_matrix(mat)
+            indik = 0
+            print()
+
+        # the next leading element
+        k += 1
+
+    # beautiful output
+    print('The determinant of the matrix by the GAUSS METHOD:', end=' ')
+    for i in range(len(mat)):
+        if mat[i][i] < 0:
+            print(f'({mat[i][i]}) *', end=' ')
+        elif mat[i][i] >= 0:
+            print(f'{mat[i][i]} *', end=' ')
+        answer *= mat[i][i]
+    div = multiplication_list(list_res)
+    if div > 0:
+        print(f'1/{div} =', end=' ')
+    else:
+        print(f'(-1/{abs(div)}) =', end=' ')
+
+    # we divide the answer by those elements that increased our determinant
+    # and adding a minus from the string permutation
+    if minus_counter % 2 == 0:
+        print(answer // multiplication_list(list_res))
+    else:
+        print(-answer // multiplication_list(list_res))
+# <<<<<<<<<-----------------the ending of the code associated with the Gauss method----------->>>>>>>>>>>>>
 
 # entering the name of a text file
 name_file = input("Enter name your test file: ")
@@ -208,7 +358,7 @@ with open(name_file) as file:
     r_z, c_z = zero_row(matrix), zero_column(matrix) # need to definitions of the first step of entering recursion
     print("<<Your matrix from file>>")
     output_matrix(matrix)
-    # if the matrix consists of only one element the result will be this element
+    #if the matrix consists of only one element the result will be this element
     if len(matrix) == 1:
         print(f'The determinant of the matrix by the RECURSIVE formula: {matrix[0][0]}')
     else:
@@ -222,3 +372,8 @@ with open(name_file) as file:
     # calling the Leibniz combinatorial formula
     print('<<The determinant of the matrix by the COMBINATORIAL formula>>')
     combin_form_leibn(matrix)
+    print()
+
+    # calling the method Gauss
+    print('<<GAUSS METHOD>>')
+    gauss_method(matrix)
